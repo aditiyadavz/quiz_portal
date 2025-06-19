@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Portal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container" role="main">
+    <h1>Quiz Portal</h1>
+    <div id="selectionScreen">
+      <h2>Select a Subject</h2>
+      <div class="subject-selection">
+        <button class="subject-btn" onclick="startQuiz('HTML')">HTML</button>
+        <button class="subject-btn" onclick="startQuiz('CSS')">CSS</button>
+        <button class="subject-btn" onclick="startQuiz('JavaScript')">JavaScript</button>
+        <button class="subject-btn" onclick="startQuiz('React')">React</button>
+        <button class="subject-btn" onclick="startQuiz('DSA')">DSA</button>
+      </div>
+    </div>
+
+    <div id="quizScreen" style="display:none">
+      <div class="question" id="questionText" aria-live="polite"></div>
+      <div class="options" id="optionsContainer" role="group" aria-labelledby="questionText"></div>
+      <div class="progress">
+        <div class="progress-bar">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+        <div id="timer"></div>
+      </div>
+      <div class="footer" id="footer"></div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>

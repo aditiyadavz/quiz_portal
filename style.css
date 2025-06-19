@@ -1,0 +1,96 @@
+    :root {
+      --bg-gradient: linear-gradient(135deg, #6a11cb, #2575fc);
+      --text-color: #fff;
+      --card-bg: #ffffff20;
+      --accent: #00c9a7;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-image: url(img/bck.jpeg);
+      background-repeat: no-repeat;
+      background-size: cover;
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      max-width: 700px;
+      width: 100%;
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .subject-selection {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .subject-btn {
+      background: #fff;
+      color: #000;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+      transition: background 0.3s;
+    }
+
+    .subject-btn:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .question, .options, .progress, .footer {
+      margin-top: 1rem;
+    }
+
+    .options button {
+      display: block;
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: none;
+      background: #fff;
+      color: #000;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .options button:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .progress-bar {
+      height: 10px;
+      background: #fff;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
