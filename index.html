@@ -3,35 +3,227 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz Portal</title>
+  <title>QuizForge — Master Your Tech Skills</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
-  <div class="container" role="main">
-    <h1>Quiz Portal</h1>
-    <div id="selectionScreen">
-      <h2>Select a Subject</h2>
-      <div class="subject-selection">
-        <button class="subject-btn" onclick="startQuiz('HTML')">HTML</button>
-        <button class="subject-btn" onclick="startQuiz('CSS')">CSS</button>
-        <button class="subject-btn" onclick="startQuiz('JavaScript')">JavaScript</button>
-        <button class="subject-btn" onclick="startQuiz('React')">React</button>
-        <button class="subject-btn" onclick="startQuiz('DSA')">DSA</button>
-      </div>
-    </div>
 
-    <div id="quizScreen" style="display:none">
-      <div class="question" id="questionText" aria-live="polite"></div>
-      <div class="options" id="optionsContainer" role="group" aria-labelledby="questionText"></div>
-      <div class="progress">
-        <div class="progress-bar">
-          <div class="progress-bar-fill" id="progressFill"></div>
-        </div>
-        <div id="timer"></div>
+  <!-- BACKGROUND ORBS -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="logo">
+      <span class="logo-icon">⬡</span>
+      <span class="logo-text">QuizForge</span>
+    </div>
+    <div class="header-right">
+      <div class="streak-badge" id="streakBadge" title="Daily streak">
+        <span class="streak-fire">🔥</span>
+        <span id="streakCount">0</span>
       </div>
-      <div class="footer" id="footer"></div>
+      <div class="xp-display" id="xpDisplay">
+        <span class="xp-icon">⚡</span>
+        <span id="xpCount">0</span> XP
+      </div>
+      <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+        <span id="themeIcon">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN APP -->
+  <main class="app-container" id="app">
+
+    <!-- ===== SCREEN: HOME ===== -->
+    <section class="screen active" id="homeScreen">
+      <div class="hero">
+        <div class="hero-label">SKILL ASSESSMENT PLATFORM</div>
+        <h1 class="hero-title">Master tech.<br><span class="gradient-text">Question by question.</span></h1>
+        <p class="hero-sub">Choose a subject, race the clock, and climb the leaderboard. Track your growth across sessions.</p>
+      </div>
+
+      <div class="stats-bar" id="globalStats">
+        <div class="stat-card">
+          <div class="stat-num" id="totalQuizzesStat">0</div>
+          <div class="stat-label">Quizzes Taken</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="bestScoreStat">—</div>
+          <div class="stat-label">Best Score</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="avgAccStat">—</div>
+          <div class="stat-label">Avg Accuracy</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="xpTotalStat">0</div>
+          <div class="stat-label">Total XP</div>
+        </div>
+      </div>
+
+      <h2 class="section-heading">Choose Your Subject</h2>
+      <div class="subject-grid" id="subjectGrid">
+        <!-- filled by JS -->
+      </div>
+
+      <h2 class="section-heading">Quiz Mode</h2>
+      <div class="modes-row">
+        <button class="mode-btn active" data-mode="standard" onclick="setMode('standard')">
+          <span class="mode-icon">🎯</span>
+          <span class="mode-name">Standard</span>
+          <span class="mode-desc">5 questions · 30s each</span>
+        </button>
+        <button class="mode-btn" data-mode="blitz" onclick="setMode('blitz')">
+          <span class="mode-icon">⚡</span>
+          <span class="mode-name">Blitz</span>
+          <span class="mode-desc">10 questions · 15s each</span>
+        </button>
+        <button class="mode-btn" data-mode="zen" onclick="setMode('zen')">
+          <span class="mode-icon">🧘</span>
+          <span class="mode-name">Zen</span>
+          <span class="mode-desc">7 questions · no timer</span>
+        </button>
+      </div>
+
+      <div class="leaderboard-preview" id="leaderboardPreview">
+        <div class="lb-header">
+          <h3>🏆 Recent High Scores</h3>
+        </div>
+        <div class="lb-list" id="lbList">
+          <p class="lb-empty">No scores yet — be the first!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SCREEN: QUIZ ===== -->
+    <section class="screen" id="quizScreen">
+      <div class="quiz-topbar">
+        <button class="back-btn" onclick="confirmExit()">← Exit</button>
+        <div class="quiz-meta">
+          <span class="quiz-subject-tag" id="quizSubjectTag"></span>
+          <span class="quiz-mode-tag" id="quizModeTag"></span>
+        </div>
+        <div class="score-live">
+          <span class="score-live-num" id="livescore">0</span>
+          <span class="score-live-label">pts</span>
+        </div>
+      </div>
+
+      <div class="quiz-progress-wrap">
+        <div class="qnum-track" id="qnumTrack"></div>
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="progressBar"></div>
+        </div>
+      </div>
+
+      <div class="question-card" id="questionCard">
+        <div class="q-counter" id="qCounter"></div>
+        <div class="q-text" id="qText" aria-live="polite"></div>
+        <div class="options-grid" id="optionsGrid" role="group" aria-labelledby="qText"></div>
+        <div class="hint-area" id="hintArea"></div>
+      </div>
+
+      <div class="quiz-footer">
+        <div class="timer-wrap" id="timerWrap">
+          <div class="timer-ring">
+            <svg viewBox="0 0 44 44" class="timer-svg">
+              <circle cx="22" cy="22" r="19" class="timer-bg"/>
+              <circle cx="22" cy="22" r="19" class="timer-arc" id="timerArc"/>
+            </svg>
+            <span class="timer-num" id="timerNum">30</span>
+          </div>
+          <div class="timer-label">seconds</div>
+        </div>
+        <div class="hint-btn-wrap">
+          <button class="hint-btn" id="hintBtn" onclick="useHint()">
+            💡 Hint <span class="hint-count" id="hintCount">2</span>
+          </button>
+          <button class="skip-btn" id="skipBtn" onclick="skipQuestion()">
+            ⏭ Skip
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== SCREEN: RESULTS ===== -->
+    <section class="screen" id="resultsScreen">
+      <div class="results-hero" id="resultsHero">
+        <span class="results-emoji" id="resultsEmoji">🏆</span>
+        <div class="results-title" id="resultsTitle">Quiz Complete!</div>
+        <div class="results-score-display">
+          <div class="score-circle">
+            <svg viewBox="0 0 120 120" class="score-ring">
+              <circle cx="60" cy="60" r="54" class="score-ring-bg"/>
+              <circle cx="60" cy="60" r="54" class="score-ring-fill" id="scoreRingFill"/>
+            </svg>
+            <div class="score-inner">
+              <div class="score-num" id="finalScore">0</div>
+              <div class="score-total" id="finalTotal">/5</div>
+            </div>
+          </div>
+        </div>
+        <div class="results-message" id="resultsMessage"></div>
+      </div>
+
+      <div class="results-stats-grid">
+        <div class="r-stat">
+          <div class="r-stat-val" id="rAccuracy">0%</div>
+          <div class="r-stat-lbl">Accuracy</div>
+        </div>
+        <div class="r-stat">
+          <div class="r-stat-val" id="rXPEarned">+0</div>
+          <div class="r-stat-lbl">XP Earned</div>
+        </div>
+        <div class="r-stat">
+          <div class="r-stat-val" id="rAvgTime">0s</div>
+          <div class="r-stat-lbl">Avg Time</div>
+        </div>
+        <div class="r-stat">
+          <div class="r-stat-val" id="rStreak">0</div>
+          <div class="r-stat-lbl">Best Streak</div>
+        </div>
+      </div>
+
+      <div class="review-section">
+        <h3 class="review-title">Question Review</h3>
+        <div class="review-list" id="reviewList"></div>
+      </div>
+
+      <div class="results-actions">
+        <button class="btn-primary" onclick="retakeQuiz()">🔁 Retake Quiz</button>
+        <button class="btn-secondary" onclick="goHome()">🏠 Back to Home</button>
+        <button class="btn-ghost" onclick="shareResult()">📤 Share Result</button>
+      </div>
+
+      <div class="name-entry" id="nameEntry">
+        <input type="text" id="playerName" placeholder="Enter your name for leaderboard" maxlength="20" />
+        <button class="btn-accent" onclick="saveToLeaderboard()">Save Score</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- EXIT CONFIRM MODAL -->
+  <div class="modal-overlay" id="exitModal">
+    <div class="modal-box">
+      <div class="modal-title">Exit Quiz?</div>
+      <p>Your progress will be lost. Are you sure you want to leave?</p>
+      <div class="modal-actions">
+        <button class="btn-danger" onclick="exitQuiz()">Yes, Exit</button>
+        <button class="btn-secondary" onclick="closeModal()">Keep Going</button>
+      </div>
     </div>
   </div>
+
+  <!-- TOAST -->
+  <div class="level-toast" id="levelToast"></div>
+
   <script src="script.js"></script>
 </body>
 </html>
