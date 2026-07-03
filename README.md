@@ -20,7 +20,7 @@ Select a topic and challenge yourself with a timed 5-question multiple-choice qu
 
 TIC_TAC_TOE/
 ├── img/
-│   └── bck.jpeg
+│ └── bck.jpeg
 ├── index.html
 ├── style.css
 ├── script.js
@@ -29,9 +29,11 @@ TIC_TAC_TOE/
 ---
 
 ### 📌 Landing Page - Subject Selection
+
 <img src="img/LandingPage.png" width="300" />
 
 ### ❓ Quiz in action
+
 <img src="img/InAction.png" width="200" />
 <img src="img/Result.png" width="200" />
 
