@@ -1,56 +1,91 @@
-# 🧠 Quiz Portal
+# QuizForge — Full-Stack Edition
 
-A fully responsive, client-side **Quiz Portal** built using **HTML, CSS, and JavaScript**.
-Select a topic and challenge yourself with a timed 5-question multiple-choice quiz on HTML, CSS, JavaScript, React, or Data Structures & Algorithms (DSA).
+A tech-skills quiz portal with **real backend authentication**, **per-user profiles**, and a **progress analytics dashboard** with charts — built on top of the original QuizForge front-end.
 
----
+## What's new vs. the original
 
-## 🚀 Features
+- 🔐 **Real authentication** — Express + SQLite backend, `bcryptjs`-hashed passwords, server-side sessions (cookies), not just `localStorage`.
+- 👤 **Per-account history** — every quiz result is tied to the logged-in user, so switching accounts shows a completely separate history/XP/streak.
+- 📊 **Analytics dashboard** (`/dashboard.html`) — score trend line chart, subject-accuracy bar chart, mode split doughnut chart, 14-day activity chart, and a recent-attempts list, all built with Chart.js.
+- 🏆 **Real cross-user leaderboard** — pulled from the database instead of a single browser's `localStorage`.
+- 🔥 Day-streak and XP tracking now live server-side.
 
-- 📚 5 Subjects to choose from: HTML, CSS, JavaScript, React, and DSA
-- ❓ 5 Questions per quiz – all multiple choice
-- 🧮 Score calculation out of 5
-- 🔁 Retake quiz or choose a different subject after finishing
-- 📱 Responsive UI for all screen sizes
-- 🎨 Modern UI with smooth gradients and intuitive layout
+The original quiz gameplay (8 subjects, Standard/Blitz/Zen modes, timer, hints, confetti, dark/light theme) is untouched.
 
----
+## Tech stack
 
-## 📁 Project Structure
+- **Backend:** Node.js + Express
+- **Database:** SQLite via Node's built-in `node:sqlite` module (no native compilation, no external DB server to install)
+- **Auth:** `bcryptjs` password hashing + `express-session` cookie sessions
+- **Frontend:** Plain HTML/CSS/JS (no build step) + Chart.js (via CDN) for the dashboard
 
-TIC_TAC_TOE/
-├── img/
-│ └── bck.jpeg
-├── index.html
-├── style.css
-├── script.js
-└── README.md
+## Requirements
 
----
+- **Node.js 22.5+** (needed for the built-in `node:sqlite` module). Check with `node -v`.
 
-### 📌 Landing Page - Subject Selection
+## Setup
 
-<img src="img/LandingPage.png" width="300" />
+```bash
+cd quiz-portal-app
+npm install
+cp .env.example .env   # edit SESSION_SECRET before deploying anywhere real
+npm start
+```
 
-### ❓ Quiz in action
+Then open **http://localhost:3000** — you'll land on the login page automatically since no account exists yet. Click **"Create an account"** to register, then start taking quizzes.
 
-<img src="img/InAction.png" width="200" />
-<img src="img/Result.png" width="200" />
+For development with auto-restart on file changes:
+```bash
+npm run dev
+```
 
----
+## Project structure
 
-## 💻 Tech Stack
+```
+quiz-portal-app/
+├── server/
+│   ├── server.js          # Express app entry point
+│   ├── db/
+│   │   ├── database.js    # SQLite schema + connection (creates quizforge.db on first run)
+│   │   └── quizforge.db   # created automatically, gitignored
+│   ├── routes/
+│   │   ├── auth.js        # POST /register, /login, /logout, GET /me
+│   │   └── quiz.js        # POST /result, GET /history, /stats, /leaderboard
+│   └── middleware/
+│       └── auth.js        # requireAuth session guard
+├── public/
+│   ├── index.html          # main quiz app (unchanged gameplay)
+│   ├── login.html          # new
+│   ├── register.html       # new
+│   ├── dashboard.html      # new — analytics dashboard
+│   ├── style.css           # original theme
+│   ├── css/extra.css       # new — auth + dashboard styles (same design tokens)
+│   ├── script.js           # original quiz logic, now synced to the backend
+│   └── js/
+│       ├── api.js          # shared fetch helper + auth guard
+│       └── dashboard.js    # renders the analytics charts
+├── package.json
+├── .env.example
+└── .gitignore
+```
 
-- **HTML5** – For creating the structure
-- **CSS3** – For styling the UI
-- **JavaScript** – For game logic
+## API reference
 
----
+All endpoints are JSON. A session cookie (`connect.sid`) is set on login/register and required for everything under `/api/quiz/*`.
 
-## 🧠 How it works?
+| Method | Path | Auth? | Description |
+|---|---|---|---|
+| POST | `/api/auth/register` | — | `{ username, email, password }` → creates account + logs in |
+| POST | `/api/auth/login` | — | `{ username, password }` (username or email) |
+| POST | `/api/auth/logout` | — | Destroys session |
+| GET | `/api/auth/me` | ✅ | Current logged-in user |
+| POST | `/api/quiz/result` | ✅ | Submit a completed quiz attempt |
+| GET | `/api/quiz/history` | ✅ | Recent attempts (`?limit=`) |
+| GET | `/api/quiz/stats` | ✅ | Aggregated analytics for the dashboard |
+| GET | `/api/quiz/leaderboard` | ✅ | Top 10 attempts across all users |
 
-- Choose one of the five subjects on the home screen.
-- Each quiz has 5 multiple-choice questions.
-- You get **30 seconds** to answer each question.
-- At the end, your score out of 5 is displayed.
-- Choose to **Retake** the quiz or **go back** to Subject Selection.
+## Security notes
+
+- Passwords are hashed with bcrypt (10 salt rounds) — never stored in plain text.
+- Sessions are `httpOnly` cookies; `secure` is auto-enabled when `NODE_ENV=production`.
+- This is a solid **learning/demo-grade** setup. Before putting it on the public internet, also consider: rate-limiting login attempts, HTTPS, a persistent session store instead of the in-memory default (fine for one server, not for multiple instances), and CSRF protection if you add cross-site forms.

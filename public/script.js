@@ -201,13 +201,56 @@ let state = {
 };
 
 // ─── INIT ────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await requireAuthOrRedirect();
+  if (!user) return; // redirected to /login.html
+  paintUserHeader(user);
+
   buildSubjectGrid();
   refreshHomeStats();
   renderLeaderboard();
   loadTheme();
   document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+
+  // Pull authoritative per-user stats + global leaderboard from the server.
+  syncStatsFromServer();
+  loadServerLeaderboard();
 });
+
+// ─── SERVER SYNC ─────────────────────────────────────────────
+async function syncStatsFromServer() {
+  try {
+    const { overview } = await API.get('/api/quiz/stats');
+    state.totalXP = overview.totalXP;
+    state.streak = overview.currentDayStreak;
+    state.totalQuizzes = overview.totalQuizzes;
+    if (overview.totalQuizzes > 0) state.bestScore = overview.bestAccuracy;
+    if (overview.avgAccuracy) document.getElementById('avgAccStat').textContent = overview.avgAccuracy + '%';
+    refreshHomeStats();
+  } catch (e) {
+    console.warn('Could not load server stats:', e.message);
+  }
+}
+
+async function loadServerLeaderboard() {
+  try {
+    const { leaderboard } = await API.get('/api/quiz/leaderboard');
+    state.serverLeaderboard = leaderboard;
+    renderLeaderboard();
+  } catch (e) {
+    console.warn('Could not load leaderboard:', e.message);
+  }
+}
+
+async function postResultToServer(payload) {
+  try {
+    await API.post('/api/quiz/result', payload);
+    loadServerLeaderboard();
+  } catch (e) {
+    console.warn('Could not save result to server:', e.message);
+    showToast('⚠️ Result saved locally only (offline?)');
+  }
+}
 
 // ─── THEME ──────────────────────────────────────────────────
 function loadTheme() {
@@ -287,6 +330,7 @@ function startQuiz() {
   state.inStreak = 0;
   state.bestStreak = 0;
   state.xpThisRound = 0;
+  state.quizStartedAt = Date.now();
 
   document.getElementById('quizSubjectTag').textContent = SUBJECTS.find(s => s.id === state.subject)?.name;
   document.getElementById('quizModeTag').textContent = cfg.label + ' Mode';
@@ -504,6 +548,19 @@ function finishQuiz() {
   saveState();
   refreshHomeStats();
 
+  const timeSpentSeconds = state.quizStartedAt ? Math.round((Date.now() - state.quizStartedAt) / 1000) : avgTime * total;
+  postResultToServer({
+    subject: SUBJECTS.find(s => s.id === state.subject)?.name || state.subject,
+    mode: state.mode,
+    score: state.score,
+    total,
+    accuracy,
+    xpEarned: state.xpThisRound,
+    avgTime,
+    bestStreak: state.bestStreak,
+    timeSpentSeconds,
+  });
+
   // Results screen population
   const emoji = accuracy === 100 ? '🏆' : accuracy >= 80 ? '🎉' : accuracy >= 60 ? '👍' : accuracy >= 40 ? '🤔' : '📚';
   const msg   = accuracy === 100 ? 'Perfect score! You\'re a legend.' : accuracy >= 80 ? 'Excellent work!' : accuracy >= 60 ? 'Solid effort, keep going!' : accuracy >= 40 ? 'Room to grow — review your answers.' : 'Practice makes perfect!';
@@ -561,34 +618,35 @@ function finishQuiz() {
 }
 
 // ─── LEADERBOARD ─────────────────────────────────────────────
-function saveToLeaderboard() {
-  const name = document.getElementById('playerName').value.trim() || 'Anonymous';
-  const total = state.questions.length;
-  const accuracy = Math.round((state.score / total) * 100);
-  const entry = {
-    name,
-    subject: SUBJECTS.find(s => s.id === state.subject)?.name || state.subject,
-    score: state.score,
-    total,
-    accuracy,
-    mode: state.mode,
-    date: new Date().toLocaleDateString()
-  };
-  state.leaderboard.unshift(entry);
-  state.leaderboard = state.leaderboard.slice(0, 10);
-  localStorage.setItem('qf_lb', JSON.stringify(state.leaderboard));
-  renderLeaderboard();
-  showToast('Score saved to leaderboard! 🏆');
-  document.getElementById('playerName').value = '';
-}
-
 function renderLeaderboard() {
   const list = document.getElementById('lbList');
+  const rankClass = ['gold','silver','bronze'];
+
+  // Prefer the real, cross-user leaderboard from the server once it's loaded.
+  if (state.serverLeaderboard) {
+    if (!state.serverLeaderboard.length) {
+      list.innerHTML = '<p class="lb-empty">No scores yet — be the first!</p>';
+      return;
+    }
+    list.innerHTML = state.serverLeaderboard.map((e, i) => {
+      const accuracy = Math.round((e.score / e.total) * 100);
+      return `
+        <div class="lb-entry">
+          <span class="lb-rank ${rankClass[i] || ''}">${i < 3 ? ['🥇','🥈','🥉'][i] : i+1}</span>
+          <span class="lb-name">${e.avatar_emoji || '🧑'} ${e.username}</span>
+          <span class="lb-subject">${e.subject}</span>
+          <span class="lb-score">${accuracy}%</span>
+        </div>
+      `;
+    }).join('');
+    return;
+  }
+
+  // Fallback to local leaderboard cache while the server call is in flight.
   if (!state.leaderboard.length) {
     list.innerHTML = '<p class="lb-empty">No scores yet — be the first!</p>';
     return;
   }
-  const rankClass = ['gold','silver','bronze'];
   list.innerHTML = state.leaderboard.map((e, i) => `
     <div class="lb-entry">
       <span class="lb-rank ${rankClass[i] || ''}">${i < 3 ? ['🥇','🥈','🥉'][i] : i+1}</span>

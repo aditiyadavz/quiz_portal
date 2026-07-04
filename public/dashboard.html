@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · QuizForge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/extra.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <header class="site-header">
+    <div class="logo">
+      <span class="logo-icon">⬡</span>
+      <span class="logo-text">QuizForge</span>
+    </div>
+    <div class="header-right">
+      <a href="/index.html" class="header-nav-link">🏠 Home</a>
+      <a href="/dashboard.html" class="header-nav-link active">📊 Dashboard</a>
+      <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
+        <span id="themeIcon">🌙</span>
+      </button>
+      <div class="header-user">
+        <span class="header-user-avatar" id="headerAvatar">🧑‍🚀</span>
+        <span class="header-user-name" id="headerUsername">…</span>
+      </div>
+      <button class="logout-link" id="logoutBtn">Log Out</button>
+    </div>
+  </header>
+
+  <main class="dash-container">
+    <div class="dash-welcome">
+      <div class="dash-welcome-row">
+        <div class="dash-title">Your Progress</div>
+      </div>
+      <div class="dash-sub">A look at everything you've practiced so far.</div>
+    </div>
+
+    <div class="dash-stats-grid" id="dashStatsGrid"></div>
+
+    <div class="dash-empty" id="dashEmpty" style="display:none;">
+      <span class="dash-empty-emoji">🌱</span>
+      <p class="dash-empty-text">No quizzes yet — take one to start building your analytics.</p>
+      <br>
+      <a href="/index.html" class="btn-primary" style="text-decoration:none;">Take a Quiz</a>
+    </div>
+
+    <div id="dashCharts">
+      <div class="dash-charts-grid">
+        <div class="chart-card" style="animation-delay:0.05s;">
+          <div class="chart-card-title-row"><span class="chart-card-icon">📈</span><span class="chart-card-title">Score Trend</span></div>
+          <div class="chart-card-sub">Accuracy over your last 30 attempts</div>
+          <div class="chart-canvas-wrap"><canvas id="scoreTrendChart"></canvas></div>
+        </div>
+        <div class="chart-card" style="animation-delay:0.1s;">
+          <div class="chart-card-title-row"><span class="chart-card-icon">🍩</span><span class="chart-card-title">Mode Split</span></div>
+          <div class="chart-card-sub">Standard vs. Blitz vs. Zen</div>
+          <div class="chart-canvas-wrap"><canvas id="modeChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="dash-charts-grid">
+        <div class="chart-card" style="animation-delay:0.15s;">
+          <div class="chart-card-title-row"><span class="chart-card-icon">📚</span><span class="chart-card-title">Subject Accuracy</span></div>
+          <div class="chart-card-sub">Average accuracy per subject</div>
+          <div class="chart-canvas-wrap"><canvas id="subjectChart"></canvas></div>
+        </div>
+        <div class="chart-card" style="animation-delay:0.2s;">
+          <div class="chart-card-title-row"><span class="chart-card-icon">📅</span><span class="chart-card-title">Recent Activity</span></div>
+          <div class="chart-card-sub">Quizzes per day, last 14 days</div>
+          <div class="chart-canvas-wrap small"><canvas id="activityChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="chart-card" style="animation-delay:0.25s;">
+        <div class="chart-card-title-row"><span class="chart-card-icon">🕐</span><span class="chart-card-title">Recent Attempts</span></div>
+        <div class="chart-card-sub">Your last 8 quiz sessions</div>
+        <div class="dash-history-list" id="dashHistoryList"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

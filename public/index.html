@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/extra.css">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
@@ -31,9 +32,15 @@
         <span class="xp-icon">⚡</span>
         <span id="xpCount">0</span> XP
       </div>
+      <a href="/dashboard.html" class="header-nav-link">📊 Dashboard</a>
       <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">
         <span id="themeIcon">🌙</span>
       </button>
+      <div class="header-user">
+        <span class="header-user-avatar" id="headerAvatar">🧑‍🚀</span>
+        <span class="header-user-name" id="headerUsername">…</span>
+      </div>
+      <button class="logout-link" id="logoutBtn">Log Out</button>
     </div>
   </header>
 
@@ -202,8 +209,8 @@
       </div>
 
       <div class="name-entry" id="nameEntry">
-        <input type="text" id="playerName" placeholder="Enter your name for leaderboard" maxlength="20" />
-        <button class="btn-accent" onclick="saveToLeaderboard()">Save Score</button>
+        <span>✅ Saved to your profile &amp; the global leaderboard automatically.</span>
+        <a href="/dashboard.html" class="btn-accent" style="text-decoration:none; display:inline-block;">📊 View Analytics</a>
       </div>
     </section>
 
@@ -224,6 +231,7 @@
   <!-- TOAST -->
   <div class="level-toast" id="levelToast"></div>
 
+  <script src="js/api.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

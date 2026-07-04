@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log In · QuizForge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/extra.css">
+</head>
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <div class="bg-orb orb-1" style="opacity:0.5;"></div>
+      <div class="auth-brand-eyebrow">SKILL ASSESSMENT PLATFORM</div>
+      <h1 class="auth-brand-headline">Pick up right<br>where your <span class="grad">streak</span> left off.</h1>
+      <p class="auth-brand-copy">Your XP, accuracy trends, and daily streak are saved to your account — log in to see how far you've come.</p>
+      <div class="subject-orbit">
+        <div class="orbit-node n1"><span class="n-icon">🌐</span> HTML</div>
+        <div class="orbit-node n2"><span class="n-icon">⚡</span> JavaScript</div>
+        <div class="orbit-node n3"><span class="n-icon">🎨</span> CSS</div>
+        <div class="orbit-node n4"><span class="n-icon">⚛️</span> React</div>
+        <div class="orbit-node n5"><span class="n-icon">🧩</span> DSA</div>
+        <div class="orbit-node n6"><span class="n-icon">🐍</span> Python</div>
+      </div>
+    </div>
+
+    <div class="auth-form-panel">
+      <div class="auth-card">
+        <div class="auth-logo">
+          <span class="logo-icon">🧠</span>
+          <span class="logo-text">QuizForge</span>
+        </div>
+        <h1 class="auth-title">Welcome back</h1>
+        <p class="auth-sub">Log in to continue your progress.</p>
+
+        <div class="auth-error" id="authError"></div>
+
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="username">Username or email</label>
+            <div class="field-input-wrap">
+              <input type="text" id="username" name="username" placeholder="e.g. codewizard" autocomplete="username" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="field-input-wrap">
+              <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+              <button type="button" class="field-toggle" id="togglePassword" aria-label="Show password">👁️</button>
+            </div>
+          </div>
+          <button type="submit" class="auth-submit" id="submitBtn">Log In</button>
+        </form>
+
+        <p class="auth-switch">New here? <a href="/register.html">Create an account</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    // If already logged in, skip straight to the app.
+    (async () => {
+      try {
+        await API.get('/api/auth/me');
+        window.location.href = '/index.html';
+      } catch (_) { /* not logged in — stay on this page */ }
+    })();
+
+    const form = document.getElementById('loginForm');
+    const errorBox = document.getElementById('authError');
+    const submitBtn = document.getElementById('submitBtn');
+
+    const pwInput = document.getElementById('password');
+    document.getElementById('togglePassword').addEventListener('click', (e) => {
+      const isPw = pwInput.type === 'password';
+      pwInput.type = isPw ? 'text' : 'password';
+      e.currentTarget.textContent = isPw ? '🙈' : '👁️';
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorBox.classList.remove('show');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Logging in…';
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        await API.post('/api/auth/login', { username, password });
+        window.location.href = '/index.html';
+      } catch (err) {
+        errorBox.textContent = err.message || 'Login failed. Please try again.';
+        errorBox.classList.add('show');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Log In';
+      }
+    });
+  </script>
+</body>
+</html>
