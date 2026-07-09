@@ -45,12 +45,14 @@ function fmtDay(isoDay) {
 }
 
 async function loadDashboard() {
-  const [statsRes, historyRes] = await Promise.all([
+  const [statsRes, historyRes, badgesRes] = await Promise.all([
     API.get('/api/quiz/stats'),
     API.get('/api/quiz/history?limit=8'),
+    API.get('/api/quiz/badges'),
   ]);
 
   renderOverview(statsRes.overview);
+  renderBadges(badgesRes);
 
   const hasData = statsRes.overview.totalQuizzes > 0;
   document.getElementById('dashEmpty').style.display = hasData ? 'none' : 'block';
@@ -63,6 +65,20 @@ async function loadDashboard() {
     renderActivity(statsRes.activity);
     renderHistory(historyRes.history);
   }
+}
+
+function renderBadges({ badges, earnedCount, totalCount }) {
+  document.getElementById('badgesCount').textContent = `${earnedCount}/${totalCount} earned`;
+  const grid = document.getElementById('badgesGrid');
+  grid.innerHTML = badges.map((b, i) => `
+    <div class="badge-card ${b.earned ? 'earned' : 'locked'}" style="animation-delay:${i * 0.03}s;" title="${b.description}">
+      ${b.earned ? '<span class="badge-check">✅</span>' : ''}
+      <div class="badge-emoji">${b.emoji}</div>
+      <div class="badge-name">${b.name}</div>
+      <div class="badge-desc">${b.description}</div>
+      <div class="badge-progress">${b.progress}</div>
+    </div>
+  `).join('');
 }
 
 function renderOverview(o) {

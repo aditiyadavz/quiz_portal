@@ -168,4 +168,121 @@ router.get('/leaderboard', (req, res) => {
   res.json({ leaderboard: rows });
 });
 
+// GET /api/quiz/badges — achievement badges, computed from existing quiz data
+router.get('/badges', (req, res) => {
+  const userId = req.session.userId;
+
+  const overview = db
+    .prepare(
+      `SELECT
+        COUNT(*) AS totalQuizzes,
+        COALESCE(MAX(accuracy), 0) AS bestAccuracy,
+        COALESCE(AVG(accuracy), 0) AS avgAccuracy,
+        COALESCE(COUNT(DISTINCT subject), 0) AS distinctSubjects,
+        COALESCE(SUM(CASE WHEN accuracy >= 100 THEN 1 ELSE 0 END), 0) AS perfectScores,
+        COALESCE(SUM(CASE WHEN mode = 'blitz' THEN 1 ELSE 0 END), 0) AS blitzCount,
+        COALESCE(SUM(CASE WHEN mode = 'zen' THEN 1 ELSE 0 END), 0) AS zenCount,
+        COALESCE(MAX(best_streak), 0) AS bestQuestionStreak
+      FROM quiz_results WHERE user_id = ?`
+    )
+    .get(userId);
+
+  const stats = db.prepare('SELECT * FROM user_stats WHERE user_id = ?').get(userId) || {
+    total_xp: 0,
+    current_streak: 0,
+    longest_streak: 0,
+  };
+
+  const TOTAL_SUBJECTS = 8;
+
+  const badges = [
+    {
+      id: 'first_quiz',
+      emoji: '🥇',
+      name: 'First Steps',
+      description: 'Complete your first quiz',
+      earned: overview.totalQuizzes >= 1,
+      progress: `${Math.min(overview.totalQuizzes, 1)}/1`,
+    },
+    {
+      id: 'perfect_score',
+      emoji: '💯',
+      name: 'Perfectionist',
+      description: 'Score 100% on any quiz',
+      earned: overview.perfectScores >= 1,
+      progress: overview.perfectScores >= 1 ? 'Earned' : '0/1',
+    },
+    {
+      id: 'question_streak',
+      emoji: '⚡',
+      name: 'On Fire',
+      description: 'Get 5 questions in a row correct',
+      earned: overview.bestQuestionStreak >= 5,
+      progress: `${Math.min(overview.bestQuestionStreak, 5)}/5`,
+    },
+    {
+      id: 'subject_explorer',
+      emoji: '🗺️',
+      name: 'Subject Explorer',
+      description: 'Try every subject at least once',
+      earned: overview.distinctSubjects >= TOTAL_SUBJECTS,
+      progress: `${overview.distinctSubjects}/${TOTAL_SUBJECTS}`,
+    },
+    {
+      id: 'blitz_runner',
+      emoji: '🚀',
+      name: 'Blitz Runner',
+      description: 'Complete 5 Blitz mode quizzes',
+      earned: overview.blitzCount >= 5,
+      progress: `${Math.min(overview.blitzCount, 5)}/5`,
+    },
+    {
+      id: 'zen_master',
+      emoji: '🧘',
+      name: 'Zen Master',
+      description: 'Complete 5 Zen mode quizzes',
+      earned: overview.zenCount >= 5,
+      progress: `${Math.min(overview.zenCount, 5)}/5`,
+    },
+    {
+      id: 'sharpshooter',
+      emoji: '🎯',
+      name: 'Sharpshooter',
+      description: '90%+ average accuracy over 10+ quizzes',
+      earned: overview.totalQuizzes >= 10 && overview.avgAccuracy >= 90,
+      progress: overview.totalQuizzes >= 10 ? `${Math.round(overview.avgAccuracy)}/90%` : `${overview.totalQuizzes}/10 quizzes`,
+    },
+    {
+      id: 'marathoner',
+      emoji: '💪',
+      name: 'Marathoner',
+      description: 'Complete 25 quizzes total',
+      earned: overview.totalQuizzes >= 25,
+      progress: `${Math.min(overview.totalQuizzes, 25)}/25`,
+    },
+    {
+      id: 'week_streak',
+      emoji: '🔥',
+      name: 'Week Warrior',
+      description: 'Hit a 7-day streak',
+      earned: stats.longest_streak >= 7,
+      progress: `${Math.min(stats.longest_streak, 7)}/7`,
+    },
+    {
+      id: 'xp_1000',
+      emoji: '⭐',
+      name: 'Rising Star',
+      description: 'Earn 1,000 total XP',
+      earned: stats.total_xp >= 1000,
+      progress: `${Math.min(stats.total_xp, 1000)}/1000`,
+    },
+  ];
+
+  res.json({
+    badges,
+    earnedCount: badges.filter((b) => b.earned).length,
+    totalCount: badges.length,
+  });
+});
+
 module.exports = router;
